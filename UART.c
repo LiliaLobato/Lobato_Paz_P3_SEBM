@@ -1,0 +1,166 @@
+/*
+ * UART.c
+ *
+ *  Created on: 07/04/2019
+ *      Author: best buy
+ */
+
+#include "UART.h"
+
+uart_mail_box_t g_mail_box_uart_0 = { 0, 0 };
+
+void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
+		uart_baud_rate_t baud_rate) {
+	SIM->SCGC4 |= UART0_SIM_SCGC; //PIN 10 OF SCGC4 IS SET
+
+	float SBR = 0, brfd = 0;
+	uint16_t sbr_int = 0, sbr_LOW = 0, sbr_HIGH = 0, brfa = 0;
+	SBR = (float) system_clk / ((baud_rate) * 16);
+	sbr_int = (uint16_t) SBR;
+	sbr_LOW = sbr_int & UART_BDL_SBR_MASK;
+	sbr_HIGH = sbr_int >> UARTn_SBR_5_SHIFT;
+	sbr_HIGH &= UART_BDH_SBR_MASK;
+
+	brfd = SBR - sbr_int;
+	brfa = (uint16_t) brfd * 32;
+
+	UART0->C2 &= ~UART_C2_TE_MASK; //TRANSMITTER DISABLED
+	UART0->C2 &= ~UART_C2_RE_MASK; //RECIEVER DISABLED
+
+	UART0->BDH = sbr_HIGH; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
+	UART0->BDL = sbr_LOW; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
+
+	UART0->C4 |= brfa & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
+
+	UART0->C2 |= UART_C2_TE_MASK; //TRANSMITTER ENABLED
+	UART0->C2 |= UART_C2_RE_MASK; //RECIEVER ENABLED
+
+}
+
+void UART_interrupt_enable(uart_channel_t uart_channel) {
+	switch (uart_channel) {
+	case UART_0:
+		UART0->C2 |= UART_C2_RIE_MASK;
+		break;
+	case UART_1:
+		UART1->C2 |= UART_C2_RIE_MASK;
+		break;
+	case UART_2:
+		UART2->C2 |= UART_C2_RIE_MASK;
+		break;
+	case UART_3:
+		UART3->C2 |= UART_C2_RIE_MASK;
+		break;
+	case UART_4:
+		UART4->C2 |= UART_C2_RIE_MASK;
+		break;
+	case UART_5:
+		UART5->C2 |= UART_C2_RIE_MASK;
+		break;
+	}
+}
+
+void UART_put_char(uart_channel_t uart_channel, uint8_t character) {
+	switch (uart_channel) {
+	case UART_0:
+		while (!(UART0->S1 & UART_S1_TDRE_MASK))
+			;
+		UART0->D = character;
+		break;
+	case UART_1:
+		while (!(UART1->S1 & UART_S1_TDRE_MASK))
+			;
+		UART1->D = character;
+		break;
+	case UART_2:
+		while (!(UART2->S1 & UART_S1_TDRE_MASK))
+			;
+		UART2->D = character;
+		break;
+	case UART_3:
+		while (!(UART3->S1 & UART_S1_TDRE_MASK))
+			;
+		UART3->D = character;
+		break;
+	case UART_4:
+		while (!(UART4->S1 & UART_S1_TDRE_MASK))
+			;
+		UART4->D = character;
+		break;
+	case UART_5:
+		while (!(UART5->S1 & UART_S1_TDRE_MASK))
+			;
+		UART5->D = character;
+		break;
+	}
+
+}
+/**
+ UART_put_char
+ La trasmisión de un carácter se realiza al escribir directamente en el registro UART0_D, pero antes de realizar esta
+ acción hay que asegurarse que la UART no este trasmitiendo, esto se realiza al verificar que la bandera TDRE del
+ registro de UART_S1 este en cero.
+ */
+
+void UART_put_string(uart_channel_t uart_channel, int8_t* string) {
+	while ('\0' != *string)
+		UART_put_char(uart_channel, *string++);
+}
+
+/**
+ UART0_RX_TX_IRQHandler
+ Por seguridad hay que verificar que primero se terminó de recibir la información por el puesto serie, esto se realiza
+ chekando que la bandera RDRF sea cero, después de esto, se captura el valor recibido en UART0_D en el mailbox, y
+ se activa la bandera de este.
+ */
+
+void UART0_RX_TX_IRQHandler(uart_channel_t uart_channel) {
+
+	while (!(UART0->S1 & UART_S1_RDRF_MASK));
+		g_mail_box_uart_0.flag = TRUE;
+		g_mail_box_uart_0.mailBox = UART0->D;
+	/**switch (uart_channel) {
+	case UART_0:
+		while (!(UART0->S1 & UART_S1_RDRF_MASK));
+			g_mail_box_uart_0.flag = TRUE;
+			g_mail_box_uart_0.mailBox = UART0->D;
+		break;
+
+	case UART_1:
+		while(!(UART1->S1 & UART_S1_RDRF_MASK));
+			g_mail_box_uart_0.flag = TRUE;
+			g_mail_box_uart_0.mailBox = UART1->D;
+		break;
+	case UART_2:
+		while(!(UART2->S1 & UART_S1_RDRF_MASK));
+			g_mail_box_uart_0.flag = TRUE;
+			g_mail_box_uart_0.mailBox = UART2->D;
+		break;
+	case UART_3:
+		while (!(UART3->S1 & UART_S1_RDRF_MASK));
+			g_mail_box_uart_0.flag = TRUE;
+			g_mail_box_uart_0.mailBox = UART3->D;
+		break;
+	case UART_4:
+		while (!(UART4->S1 & UART_S1_RDRF_MASK));
+			g_mail_box_uart_0.flag = TRUE;
+			g_mail_box_uart_0.mailBox = UART4->D;
+		break;
+	case UART_5:
+		while (!(UART5->S1 & UART_S1_RDRF_MASK));
+			g_mail_box_uart_0.flag = TRUE;
+			g_mail_box_uart_0.mailBox = UART5->D;
+		break;
+
+	}**/
+
+//revisar que RDRF sea cero
+	//caputar el valor recibido en UART_D
+	//activar la bandera
+}
+/**
+  UART_put_char
+La trasmisión de un carácter se realiza al escribir directamente en el registro UART0_D, pero antes de realizar esta
+acción hay que asegurarse que la UART no este trasmitiendo, esto se realiza al verificar que la bandera TDRE del
+registro de UART_S1 este en cero.
+ */
