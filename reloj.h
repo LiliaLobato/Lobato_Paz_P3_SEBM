@@ -18,7 +18,6 @@
 #define ADDRESS_LECTURA 0xDF //Lectura
 
 /**Other macros*/
-#define YEARS_INIT_OFFSET 		2000
 #define SECS_WITHOUT_ON_RTCC 	0x1F
 #define HOURS_WITHOUT_ON_12		0X40
 #define HOURS_AMPM	0X20
@@ -46,12 +45,6 @@ typedef enum {
 	YEARS,
 	AMPM
 } RTCC_RegisterAdresses;
-
-//TIPO DE TIEMPO
-typedef enum {
-	AM_PM,
-	FULL_TIME
-} RTCC_Hour_Format;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

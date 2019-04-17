@@ -16,6 +16,7 @@
 #include "Bits.h"
 
 #define UART0_SIM_SCGC 0x400
+#define UART1_SIM_SCGC 0x800
 #define UARTn_C2_TE_MASK 0x8
 #define UARTn_C2_RE_MASK 0x4
 #define UARTn_C2_RIE_MASK 0X20

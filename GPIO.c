@@ -180,7 +180,7 @@ uint8_t GPIO_clock_gating(gpio_port_name_t port_name)
 					SIM->SCGC5 |= GPIO_CLOCK_GATING_PORTA; /** Bit 9 of SIM_SCGC5 is  set*/
 					break;
 				case GPIO_B: /** GPIO B is selected*/
-					SIM->SCGC5 |= GPIO_CLOCK_GATING_PORTB; /** Bit 10 of SIM_SCGC5 is set*/
+					SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK; /** Bit 10 of SIM_SCGC5 is set*/
 					break;
 				case GPIO_C: /** GPIO C is selected*/
 					SIM->SCGC5 |= GPIO_CLOCK_GATING_PORTC; /** Bit 11 of SIM_SCGC5 is set*/

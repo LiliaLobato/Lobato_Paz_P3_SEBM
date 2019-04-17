@@ -5,7 +5,7 @@
 
 #include "stdint.h"
 
-#define DELAY 1000
+#define DELAY 100
 
 void delay(uint32_t delay);
 

@@ -24,8 +24,6 @@ static struct {
 	uint32_t currentSecond;
 } RTCC_DateTimeVariables;
 
-//define el formato  a desplegar
-uint32_t currentFormat = FULL_TIME;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -103,7 +101,7 @@ void RTCC_ReadDateTimeFull(void) {
 	/**Reading the MONTH*/
 	RTCC_DateTimeVariables.currentMonth = convertBCD_toBinary(RTCC_GetValue(MONTH) & SECS_WITHOUT_ON_RTCC);
 	/**Reading the SECONDS*/
-	RTCC_DateTimeVariables.currentYear = convertBCD_toBinary(RTCC_GetValue(YEARS)) + YEARS_INIT_OFFSET;
+	RTCC_DateTimeVariables.currentYear = convertBCD_toBinary(RTCC_GetValue(YEARS));
 }
 
 //Lee un registro del MCP7940M
@@ -113,57 +111,47 @@ uint8_t RTCC_GetValue(RTCC_RegisterAdresses RTCC_Reg) {
 
 	uint8_t dataFromRTCC;
 	/**Configuring the I2C in TX mode and Master mode*/
-	I2C_start();
+	I2C_start(I2C_0);
 
 	/**Writing RTCC address in the data register*/
-	I2C_write_byte(ADDRESS_ESCRITURA);
+	I2C_write_byte(I2C_0,ADDRESS_ESCRITURA);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
-	I2C_wait();
+	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
-	I2C_get_ack();
-
-	delay(DELAY); //Delay porque si
+	I2C_get_ack(I2C_0);
 
 	/**Writing the specified register address in the data register*/
-	I2C_write_byte(RTCC_Reg);
+	I2C_write_byte(I2C_0,RTCC_Reg);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
-	I2C_wait();
+	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
-	I2C_get_ack();
-	delay(DELAY); //Delay porque si
+	I2C_get_ack(I2C_0);
 
 	/**Generating a new start*/
-	I2C_repeted_start();
+	I2C_repeted_start(I2C_0);
 	/**Writing RTCC address plus 1 in the data register*/
-	I2C_write_byte(ADDRESS_LECTURA);
+	I2C_write_byte(I2C_0,ADDRESS_LECTURA);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
-	I2C_wait();
+	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
-	I2C_get_ack();
-
-	delay(DELAY); //Delay porque si
+	I2C_get_ack(I2C_0);
 
 	/**Changing the I2C module to receiver mode*/
-	I2C_tx_rx_mode(RECEIVER_MODE);
-
-	//delay(DELAY); //Delay porque si
+	I2C_tx_rx_mode(I2C_0,RECEIVER_MODE);
 
 	/**Dummy read*/
-	dataFromRTCC = I2C_read_byte();
+	dataFromRTCC = I2C_read_byte(I2C_0);
 
-	delay(DELAY); //Delay porque si
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
-	I2C_wait();
-
-	delay(DELAY); //Delay porque si
+	I2C_wait(I2C_0);
 
 	/**Generating not acknowledge*/
-	I2C_nack();
+	I2C_nack(I2C_0);
 
 	/**Generating stop signal*/
-	I2C_stop();
+	I2C_stop(I2C_0);
 	/**Reading the true value*/
-	dataFromRTCC = I2C_read_byte();
+	dataFromRTCC = I2C_read_byte(I2C_0);
 	/**Returning the value*/
 	return (dataFromRTCC);
 }
@@ -173,40 +161,34 @@ void RTCC_ChangeValue(uint8_t value, RTCC_RegisterAdresses RTCC_Reg) {
 
 	/**A small delay is executed, which will ensure that no problems will happen with the I2C device communication
 	 * when multiple reads/writes are executed one after another*/
-	delay(SMALL_DELAY);
+	delay(DELAY);
 
 	/**Configuring the I2C in TX mode and Master mode*/
-	I2C_start();
+	I2C_start(I2C_0);
 
 	/**Writing RTCC address in the data register*/
-	I2C_write_byte(ADDRESS_ESCRITURA);
+	I2C_write_byte(I2C_0,ADDRESS_ESCRITURA);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
-	I2C_wait();
+	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
-	I2C_get_ack();
-
-	delay(DELAY);
+	I2C_get_ack(I2C_0);
 
 	/**Writing the specified register address in the data register*/
-	I2C_write_byte(RTCC_Reg);
+	I2C_write_byte(I2C_0,RTCC_Reg);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
-	I2C_wait();
+	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
-	I2C_get_ack();
-
-	delay(DELAY);
+	I2C_get_ack(I2C_0);
 
 	/**Writing the register with the specified value*/
-	I2C_write_byte(value);
+	I2C_write_byte(I2C_0,value);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
-	I2C_wait();
+	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
-	I2C_get_ack();
-
-	delay(DELAY);
+	I2C_get_ack(I2C_0);
 
 	/**Generating stop signal*/
-	I2C_stop();
+	I2C_stop(I2C_0);
 }
 
 //Conversion BCD to binary
