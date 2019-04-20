@@ -83,13 +83,15 @@ int main(void) {
 	/**Configures UART 0 to transmit/receive at 11520 bauds with a 21 MHz of clock core*/
 	UART_init(UART_0, 21000000, BD_115200);
 
-	/**Configures the pin control register of pin10 in PortB as UART RX*/
-	GPIO_pin_control_register(GPIO_B, 10, &pin_control_register);
-	/**Configures the pin control register of pin11 in PortB as UART TX*/
-	GPIO_pin_control_register(GPIO_B, 11, &pin_control_register);
+	/**Enables the clock of PortC in order to configures TX and RX of UART peripheral*/
+	GPIO_clock_gating(GPIO_C);
+	/**Configures the pin control register of pin14 in PortC as UART RX*/
+	GPIO_pin_control_register(GPIO_C, 14, &pin_control_register);
+	/**Configures the pin control register of pin15 in PortC as UART TX*/
+	GPIO_pin_control_register(GPIO_C, 15, &pin_control_register);
 	/**Configures UART 0 to transmit/receive at 11520 bauds with a 21 MHz of clock core*/
-	7
-	UART_init(UART_1, 21000000, BD_9600);
+	UART_init(UART_1, 21000000, BD_115200);
+	UART_init (UART_4,  21000000, BD_9600);
 
 #ifdef DEBUG
 	printf("UART is configured");
@@ -100,9 +102,9 @@ int main(void) {
 	/**Enables the UART 0 interrupt in the NVIC*/
 	NVIC_enable_interrupt_and_priotity(UART0_IRQ, PRIORITY_10);
 	/**Enables the UART 0 interrupt*/
-	UART_interrupt_enable(UART_1);
+	UART_interrupt_enable(UART_4);
 	/**Enables the UART 0 interrupt in the NVIC*/
-	NVIC_enable_interrupt_and_priotity(UART1_IRQ, PRIORITY_10);
+	NVIC_enable_interrupt_and_priotity(UART4_IRQ, PRIORITY_10);
 
 	//limpia la pantalla
 	setScreen();
@@ -117,7 +119,8 @@ int main(void) {
 	UART_cleanAllString();
 
 	for (;;) {
-		UART_put_string(UART_1, menu1);
+		UART_put_char(UART_4, 'i');
+		UART_put_string(UART_4, menu1);
 		switch (uart_state) {
 		case TIME_MENU:
 			//imprime pantalla
