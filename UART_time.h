@@ -25,6 +25,7 @@
 #define I 'I'
 #define N 'N'
 #define O 'O'
+#define A 'A'
 
 static uint8_t entry_counter;
 static uint8_t entry[31];
@@ -63,5 +64,6 @@ void UART_changeTime();
 uint8_t int_to_BCD(uint32_t value);
 uint8_t ASCII_to_int (uint8_t timeChar);
 uint8_t isBisiesto();
+void UART_initRTCC();
 
 #endif /* UART_TIME_H_ */

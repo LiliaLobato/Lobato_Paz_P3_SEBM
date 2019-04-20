@@ -490,3 +490,9 @@ uint8_t isBisiesto() {
 		return TRUE;
 	}
 }
+
+void UART_initRTCC(){
+	RTCC_ChangeValue(0x80, SECONDS); //enciende el bit 7 de los segundos
+		RTCC_ChangeValue(0x52, HOURS);
+		RTCC_ChangeValue(0x65, SRAM); //Guarda una A en 0x20 para comprobar que esté conectado el chip
+}
