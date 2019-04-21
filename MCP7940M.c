@@ -7,7 +7,7 @@
 #include "MCP7940M.h"
 
 void MCP7940M_tSeconds(){
-	uint8_t dataFromMCP7940M;
+	/*uint8_t dataFromMCP7940M;
 	I2C_start(); //it configures the I2C in trasnmitting mode and generates the start
 
 	I2C_write_byte(0xDE); //Writing RTC address as write //11011110
@@ -31,7 +31,7 @@ void MCP7940M_tSeconds(){
 
 	I2C_stop();
 	dataFromMCP7940M = I2C_read_byte();
-
+*/
 	//return (dataFromMCP7940M);
 
 }

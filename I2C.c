@@ -135,11 +135,9 @@ void I2C_write_byte(i2c_channel_t channel, uint8_t data) {
 void I2C_wait(i2c_channel_t channel) {
 
 	switch (channel) {
-	uint8_t notStay=0;
 	case I2C_0:
-		while (FALSE == ((I2C0->S & I2C_S_IICIF_MASK) >> I2C_S_IICIF_SHIFT)){
-			notStay++;
-		}
+		while (FALSE == ((I2C0->S & I2C_S_IICIF_MASK) >> I2C_S_IICIF_SHIFT))
+			;
 		I2C0->S |= I2C_S_IICIF_MASK;
 		//Write 1 to clear this bit (w1c)
 		break;
