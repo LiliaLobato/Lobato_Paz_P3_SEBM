@@ -16,11 +16,11 @@
 #include "UART_string.h"
 #include "I2C.h"
 #include "Delay.h"
+#include "PIT.h"
+#include "Matrcial_LEDs.h"
 
 #define DEBUG
 #define DELAY_TIME 1000
-#define CONECTADO 0
-#define DESCONECTADO 1
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -29,6 +29,9 @@
 /**This is mail box to received the information from the serial port*/
 extern uart_mail_box_t g_mail_box_uart_0;
 extern uart_mail_box_t g_mail_box_uart_4;
+
+//Estado del reloj
+extern uint8_t estadoRTCC;
 
 gpio_pin_control_register_t g_I2C_pin_Conf = PORT_PCR_MUX(0x2);
 
@@ -57,7 +60,8 @@ static uint8_t menu5[] = "5) ESCRIBIR MENSAJE EN MEMORIA I2C\r";
 static uint8_t menu6[] = "6) MOSTRAR HORA EN MATRIZ DE LEDS\r";
 static uint8_t menu7[] = "7) MOSTRAR MENASAJE EN MATRIZ DE LEDS\r";
 static uint8_t statusReloj[] = "STATUS RELOJ = ";
-static uint8_t cambiarHora[] = "INTRODUCIR HORA EN FORMATO HH:MM:SS (Max 23:59:59, Min:00:00:00)\r";
+static uint8_t cambiarHora[] =
+		"INTRODUCIR HORA EN FORMATO HH:MM:SS (MAX 23:59:59, MIN:00:00:00)\r";
 static uint8_t cambiarFecha[] = "INTRODUCIR FECHA EN FORMATO DD:MM:AAAA\r";
 static uint8_t horaActual[] = "LA HORA ACTUAL ES:\r";
 static uint8_t fechaActual[] = "LA FECHA ACTUAL ES:\r";
@@ -67,9 +71,6 @@ static uint8_t ledsTime[] =
 		"DESEA MOSTRAR LA HORA EN LA MATRIZ DE LEDS? (SI/NO)\r";
 static uint8_t ledsMemory1[] = "MENSAJE ALMACENADOS:\r";
 static uint8_t ledsMemory2[] = "MENSAJE A MOSTRAR? (1 A 5)\r";
-
-//Estado del reloj
-static uint8_t estadoRTCC = CONECTADO;
 
 int main(void) {
 	//LLenado de arreglos
@@ -99,8 +100,7 @@ int main(void) {
 	GPIO_pin_control_register(GPIO_C, 15, &pin_control_register);
 
 	/**Configures UART 0 to transmit/receive at 11520 bauds with a 21 MHz of clock core*/
-	UART_init(UART_1, 21000000, BD_115200);
-	UART_init(UART_4, 21000000, BD_5600);
+	UART_init(UART_4, 21000000, BD_9600);
 
 #ifdef DEBUG
 	printf("UART is configured");
@@ -125,16 +125,32 @@ int main(void) {
 
 	UART_cleanAllString();
 	UART_initRTCC();
-	UART_put_char(UART_4, 'i');
+
+	//Matricial
+	Matricial_LEDs_init();
+	Matricial_LEDs_clear();
 
 	for (;;) {
 		//UART_put_char(UART_4, 'i');
+		//UART_put_string(UART_4, menu1);
 		//UART_put_string(UART_4, menu1);
 
 		if (g_mail_box_uart_4.flag) {
 			UART_put_char(UART_4, g_mail_box_uart_4.mailBox);
 			g_mail_box_uart_4.flag = FALSE;
 		}
+		//Revisa si está conectado el RTCC
+		if (A == convertBCD_toBinary(RTCC_GetValue(SRAM))) {
+			estadoRTCC = CONECTADO;
+			if (!I2C_busy(I2C_0)) {
+				RTCC_ReadDateTimeFull();
+			}
+		} else {
+			estadoRTCC = DESCONECTADO;
+		}
+
+
+		//Maquina de estados
 		switch (uart_state) {
 		case TIME_MENU:
 			//imprime pantalla
@@ -157,14 +173,12 @@ int main(void) {
 				UART_put_string(UART_0, statusReloj);
 				UART_setEntryCounter(1);
 			}
-			if (A == convertBCD_toBinary(RTCC_GetValue(SRAM))) {
+			if (CONECTADO == estadoRTCC) {
 				UART_put_string(UART_0, "\033[18;25H");
 				UART_put_string(UART_0, "CONECTADO    ");
-				estadoRTCC = CONECTADO;
 			} else {
 				UART_put_string(UART_0, "\033[18;25H");
 				UART_put_string(UART_0, "DESCONECTADO ");
-				estadoRTCC = DESCONECTADO;
 			}
 			//revisar buzon
 			uart_state = UART_check_buzon(user_entry, uart_state);
@@ -203,8 +217,7 @@ int main(void) {
 			//imprime hora actual
 			if (DESCONECTADO == estadoRTCC) {
 				UART_put_string(UART_0, "\033[11;10H");
-				UART_put_string(UART_0,
-						"RTCC DESCONECTADO, VUELVA A MENU Y RECONECTE");
+				UART_put_string(UART_0, "DESCONECTADO");
 			} else {
 				UART_currentTime();
 			}
@@ -223,7 +236,7 @@ int main(void) {
 			if (DESCONECTADO == estadoRTCC) {
 				UART_put_string(UART_0, "\033[11;10H");
 				UART_put_string(UART_0,
-						"RTCC DESCONECTADO, VUELVA A MENU Y RECONECTE");
+						"DESCONECTADO");
 			} else {
 				UART_currentDate();
 			}

@@ -138,7 +138,6 @@ void I2C_wait(i2c_channel_t channel) {
 	uint8_t notStay=0;
 	case I2C_0:
 		while (FALSE == ((I2C0->S & I2C_S_IICIF_MASK) >> I2C_S_IICIF_SHIFT)){
-			notStay++;
 		}
 		I2C0->S |= I2C_S_IICIF_MASK;
 		//Write 1 to clear this bit (w1c)
@@ -154,6 +153,7 @@ void I2C_wait(i2c_channel_t channel) {
 		I2C2->S |= I2C_S_IICIF_MASK;
 		break;
 	default:
+		notStay++;
 		break;
 	}
 

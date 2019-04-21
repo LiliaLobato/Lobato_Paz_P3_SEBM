@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "UART_time.h"
 #include "reloj.h"
+#include "Matrcial_LEDs.h"
 #include "UART_string.h"
 
 #define AUX_NUM "0"
@@ -93,9 +94,17 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 			} else if (S == entry[1] & I == entry[2] & NADA == entry[3]) {
 				//revisa si es un SI ENTER_SI
 				user_entry = ENTER_SI;
+				Matricial_LEDs_Modo_cadena_callback_off();
+				Matricial_LEDs_clear();
+				Matricial_LEDs_Modo_Hora_init();
+				Matricial_LEDs_modo_hora();
+
 			} else if (N == entry[1] & O == entry[2] & NADA == entry[3]) {
 				//revisa si es un NO ENTER_NO
 				user_entry = ENTER_NO;
+				Matricial_LEDs_Modo_cadena_callback_off();
+				Matricial_LEDs_Modo_hora_callback_off();
+				Matricial_LEDs_clear();
 			}
 			//revisa si uno de los números tecleados es una opción del menú, ENTER_#
 			else if ((UNO == entry[1] | DOS == entry[1] | TRES == entry[1]
@@ -110,6 +119,10 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					}
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
+
+						Matricial_LEDs_Modo_hora_callback_off();
+						Matricial_LEDs_set_string(UART_getString(STRING_UNO));
+						Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_UNO);
 					}
 					break;
@@ -120,6 +133,9 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					}
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
+						Matricial_LEDs_Modo_hora_callback_off();
+						Matricial_LEDs_set_string(UART_getString(STRING_DOS));
+												Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_DOS);
 					}
 					break;
@@ -130,6 +146,9 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					}
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
+						Matricial_LEDs_Modo_hora_callback_off();
+						Matricial_LEDs_set_string(UART_getString(STRING_TRES));
+												Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_TRES);
 					}
 					break;
@@ -140,6 +159,9 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					}
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
+						Matricial_LEDs_Modo_hora_callback_off();
+						Matricial_LEDs_set_string(UART_getString(STRING_CUATRO));
+												Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_CUATRO);
 					}
 					break;
@@ -150,6 +172,9 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					}
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
+						Matricial_LEDs_Modo_hora_callback_off();
+						Matricial_LEDs_set_string(UART_getString(STRING_CINCO));
+												Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_CINCO);
 					}
 					break;
@@ -485,5 +510,6 @@ uint8_t isBisiesto() {
 void UART_initRTCC() {
 	RTCC_ChangeValue(0x80, SECONDS); //enciende el bit 7 de los segundos
 	RTCC_ChangeValue(0x52, HOURS);
+	RTCC_setGlobalVariable(HOURS, 12);
 	RTCC_ChangeValue(0x65, SRAM); //Guarda una A en 0x20 para comprobar que esté conectado el chip
 }

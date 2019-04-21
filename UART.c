@@ -16,17 +16,26 @@ uart_mail_box_t g_mail_box_uart_5 = { 0, 0 };
 
 void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 		uart_baud_rate_t baud_rate) {
+	//Variables para Baud Rate
+	uint8_t SBRH = 0;
+	uint8_t SBRL = 0;
+	uint8_t BRFA = 0;
 
-	float SBR = 0, brfd = 0;
-	uint16_t sbr_int = 0, sbr_LOW = 0, sbr_HIGH = 0, brfa = 0;
-	SBR = (float) system_clk / ((baud_rate) * 16.0F);
-	sbr_int = (uint16_t) SBR;
-	sbr_LOW = sbr_int & UART_BDL_SBR_MASK;
-	sbr_HIGH = sbr_int >> UARTn_SBR_5_SHIFT;
-	sbr_HIGH &= UART_BDH_SBR_MASK;
+	//Cálculo de SBR
+	float SBR = system_clk / (16.0 * ((float) (baud_rate)));
+	float BFRD = SBR;
 
-	brfd = SBR - sbr_int;
-	brfa = (uint16_t) brfd * 32;
+	//Decimal part
+	while (1 < BFRD) {
+		BFRD = BFRD - 0.1F;
+	}
+
+	//BFRA
+	BRFA = (uint8_t) (BFRD * 32.0F);
+
+	//High and Low SBR
+	SBRL = (uint8_t) (((uint16_t) SBR) & 0x007FU);
+	SBRH = (uint8_t) ((((uint16_t) SBR) & 0x1F00U) >> 7);
 
 	switch (uart_channel) {
 	case UART_0:
@@ -34,10 +43,10 @@ void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 		UART0->C2 &= ~UART_C2_TE_MASK; //TRANSMITTER DISABLED
 		UART0->C2 &= ~UART_C2_RE_MASK; //RECIEVER DISABLED
 
-		UART0->BDH = sbr_HIGH; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
-		UART0->BDL = sbr_LOW; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
+		UART0->BDH = SBRH & UART_BDH_SBR_MASK; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
+		UART0->BDL = SBRL; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
 
-		UART0->C4 |= brfa & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
+		UART0->C4 |= BRFA & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
 
 		UART0->C2 |= UART_C2_TE_MASK; //TRANSMITTER ENABLED
 		UART0->C2 |= UART_C2_RE_MASK; //RECIEVER ENABLED
@@ -47,10 +56,10 @@ void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 		UART1->C2 &= ~UART_C2_TE_MASK; //TRANSMITTER DISABLED
 		UART1->C2 &= ~UART_C2_RE_MASK; //RECIEVER DISABLED
 
-		UART1->BDH = sbr_HIGH; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
-		UART1->BDL = sbr_LOW; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
+		UART1->BDH = SBRH & UART_BDH_SBR_MASK; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
+		UART1->BDL = SBRL; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
 
-		UART1->C4 |= brfa & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
+		UART1->C4 |= BRFA & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
 
 		UART1->C2 |= UART_C2_TE_MASK; //TRANSMITTER ENABLED
 		UART1->C2 |= UART_C2_RE_MASK; //RECIEVER ENABLED
@@ -60,10 +69,10 @@ void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 		UART2->C2 &= ~UART_C2_TE_MASK; //TRANSMITTER DISABLED
 		UART2->C2 &= ~UART_C2_RE_MASK; //RECIEVER DISABLED
 
-		UART2->BDH = sbr_HIGH; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
-		UART2->BDL = sbr_LOW; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
+		UART2->BDH = SBRH & UART_BDH_SBR_MASK; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
+		UART2->BDL = SBRL; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
 
-		UART2->C4 |= brfa & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
+		UART2->C4 |= BRFA & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
 
 		UART2->C2 |= UART_C2_TE_MASK; //TRANSMITTER ENABLED
 		UART2->C2 |= UART_C2_RE_MASK; //RECIEVER ENABLED
@@ -73,10 +82,10 @@ void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 		UART3->C2 &= ~UART_C2_TE_MASK; //TRANSMITTER DISABLED
 		UART3->C2 &= ~UART_C2_RE_MASK; //RECIEVER DISABLED
 
-		UART3->BDH = sbr_HIGH; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
-		UART3->BDL = sbr_LOW; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
+		UART3->BDH = SBRH & UART_BDH_SBR_MASK; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
+		UART3->BDL = SBRL; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
 
-		UART3->C4 |= brfa & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
+		UART3->C4 |= BRFA & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
 
 		UART3->C2 |= UART_C2_TE_MASK; //TRANSMITTER ENABLED
 		UART3->C2 |= UART_C2_RE_MASK; //RECIEVER ENABLED
@@ -86,10 +95,10 @@ void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 		UART4->C2 &= ~UART_C2_TE_MASK; //TRANSMITTER DISABLED
 		UART4->C2 &= ~UART_C2_RE_MASK; //RECIEVER DISABLED
 
-		UART4->BDH = sbr_HIGH; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
-		UART4->BDL = sbr_LOW; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
+		UART4->BDH = SBRH & UART_BDH_SBR_MASK; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
+		UART4->BDL = SBRL; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
 
-		UART4->C4 |= brfa & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
+		UART4->C4 |= BRFA & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
 
 		UART4->C2 |= UART_C2_TE_MASK; //TRANSMITTER ENABLED
 		UART4->C2 |= UART_C2_RE_MASK; //RECIEVER ENABLED
@@ -99,10 +108,10 @@ void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 		UART5->C2 &= ~UART_C2_TE_MASK; //TRANSMITTER DISABLED
 		UART5->C2 &= ~UART_C2_RE_MASK; //RECIEVER DISABLED
 
-		UART5->BDH = sbr_HIGH; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
-		UART5->BDL = sbr_LOW; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
+		UART5->BDH = SBRH & UART_BDH_SBR_MASK; //Copiar los bits UART baud rate [12:8] a los bits SRB del registro UART0_BDH
+		UART5->BDL = SBRL; //Copiar los bits UART baud rate [7:0] al registro UART0_BDL
 
-		UART5->C4 |= brfa & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
+		UART5->C4 |= BRFA & UART_C4_BRFA_MASK; //Copiar brfa al registro UART0_C4[4:0], los cuales corresponden al campo brfa
 
 		UART5->C2 |= UART_C2_TE_MASK; //TRANSMITTER ENABLED
 		UART5->C2 |= UART_C2_RE_MASK; //RECIEVER ENABLED
