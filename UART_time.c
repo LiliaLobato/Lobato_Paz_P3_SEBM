@@ -194,7 +194,7 @@ uint8_t UART_isTimeCorrect() {
 					if (entry[7] <= 53 & entry[7] >= 48) { //0:5
 						if (entry[8] <= 57 & entry[8] >= 48) { //0:9
 							if (24
-									< (ASCII_to_int(entry[1]) * 10
+									<= (ASCII_to_int(entry[1]) * 10
 											+ ASCII_to_int(entry[2]))) {
 								return FALSE;
 							} else {
@@ -286,20 +286,8 @@ void UART_currentTime() {
 //Lee el tiempo actual del chip
 	RTCC_ReadDateTimeFull();
 	UART_put_string(UART_0, "\033[11;10H");
-
 //Imprime en formato AM/PM las horas
-	if (FALSE == RTCC_getGlobalVariable(AMPM) & 0X40 >> 6) {
-		UART_print_number(HOURS);
-	} else {
-		UART_print_number(HOURS);
-		UART_put_string(UART_0, "\033[11;10H");
-		if (RTCC_getGlobalVariable(HOURS) / 10) {
-			UART_put_string(UART_0, "1");
-		} else {
-			UART_put_string(UART_0, "0");
-		}
-		UART_put_string(UART_0, "\033[11;12H");
-	}
+	UART_print_number(HOURS);
 //imprime los minutos y segundos
 	UART_put_string(UART_0, ":");
 	UART_print_number(MINUTES);
@@ -324,21 +312,11 @@ void UART_currentDate() {
 }
 
 void UART_print_number(RTCC_RegisterAdresses reg) {
-	if (YEARS == reg) {
-		uint32_t num = RTCC_getGlobalVariable(reg);
-		uint32_t numH = num / 10; //decenas de la unidad de tiempo
-		uint32_t numL = num - (num / 10) * 10;
-		//UART_print(2); //Envia decenas
-		//UART_print(0); // envia unidades
-		UART_print(numH); //Envia decenas
-		UART_print(numL); // envia unidades
-	} else {
-		uint32_t num = RTCC_getGlobalVariable(reg);
-		uint32_t numH = num / 10; //decenas de la unidad de tiempo
-		uint32_t numL = num - (num / 10) * 10;
-		UART_print(numH); //Envia decenas
-		UART_print(numL); // envia unidades
-	}
+	uint32_t num = RTCC_getGlobalVariable(reg);
+	uint32_t numH = num / 10; //decenas de la unidad de tiempo
+	uint32_t numL = num - (num / 10) * 10;
+	UART_print(numH); //Envia decenas
+	UART_print(numL); // envia unidades
 }
 
 void UART_print(uint32_t num) { //convierte de número a string
@@ -454,17 +432,30 @@ void setScreen() { //Limpia la pantalla
 }
 
 void UART_changeTime() { //cambia el tiempo en el RTCC y las variables globales
-	if (12 >= getEntryTime(HOURS)) { //guarda dependiendo si es 12 o 24
-		RTCC_ChangeValue(int_to_BCD(getEntryTime(HOURS)) | 0x40 & ~(0x20),
-				HOURS); //cambio en horas
+	if (12 > getEntryTime(HOURS)) { //guarda dependiendo si es 12 o 24
+		if (FALSE == getEntryTime(HOURS)) {
+			RTCC_ChangeValue(int_to_BCD(12) | 0x40 & ~(0x20), HOURS);
+		} else {
+			RTCC_ChangeValue(int_to_BCD(getEntryTime(HOURS)) | 0x40 & ~(0x20),
+					HOURS); //cambio en horas
+		}
 	} else {
-		RTCC_ChangeValue(int_to_BCD(getEntryTime(HOURS) - 12) | 0x40 | 0X20,
-				HOURS); //cambio en horas
+		if (12 == getEntryTime(HOURS)) {
+			RTCC_ChangeValue(int_to_BCD(getEntryTime(HOURS)) | 0x40 | 0X20,
+					HOURS);
+		} else {
+			RTCC_ChangeValue(int_to_BCD(getEntryTime(HOURS) - 12) | 0x40 | 0X20,
+					HOURS); //cambio en horas
+		}
 	}
 	RTCC_ChangeValue(int_to_BCD(getEntryTime(MINUTES)), MINUTES); //cambio en minutos
 	RTCC_ChangeValue(int_to_BCD(getEntryTime(SECONDS)) | 0x80, SECONDS); //cambio en segundos
 //RTCC_setGlobalVariable
-	RTCC_setGlobalVariable(HOURS, getEntryTime(HOURS)); //Cambio registro horas
+	if (FALSE == getEntryTime(HOURS)) {
+		RTCC_setGlobalVariable(HOURS, 12);
+	} else {
+		RTCC_setGlobalVariable(HOURS, getEntryTime(HOURS)); //Cambio registro horas
+	}
 	RTCC_setGlobalVariable(MINUTES, getEntryTime(MINUTES)); //Cambio registro minutos
 	RTCC_setGlobalVariable(SECONDS, getEntryTime(SECONDS)); //Cambio registro segundos
 }
@@ -491,8 +482,8 @@ uint8_t isBisiesto() {
 	}
 }
 
-void UART_initRTCC(){
+void UART_initRTCC() {
 	RTCC_ChangeValue(0x80, SECONDS); //enciende el bit 7 de los segundos
-		RTCC_ChangeValue(0x52, HOURS);
-		RTCC_ChangeValue(0x65, SRAM); //Guarda una A en 0x20 para comprobar que esté conectado el chip
+	RTCC_ChangeValue(0x52, HOURS);
+	RTCC_ChangeValue(0x65, SRAM); //Guarda una A en 0x20 para comprobar que esté conectado el chip
 }

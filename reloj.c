@@ -24,7 +24,6 @@ static struct {
 	uint32_t currentSecond;
 } RTCC_DateTimeVariables;
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //cambia las variables globales de tiempo
@@ -89,19 +88,37 @@ uint32_t RTCC_getGlobalVariable(RTCC_RegisterAdresses variable) {
 //Lectura ed todos los registros del MCP7940M
 void RTCC_ReadDateTimeFull(void) {
 	/**Reading the SECONDS*/
-	RTCC_DateTimeVariables.currentSecond = convertBCD_toBinary(RTCC_GetValue(SECONDS));
+	RTCC_DateTimeVariables.currentSecond = convertBCD_toBinary(
+			RTCC_GetValue(SECONDS));
 	/**Reading the MINUTES*/
-	RTCC_DateTimeVariables.currentMinute = convertBCD_toBinary(RTCC_GetValue(MINUTES));
-	/**Reading the HOURS*/
-	RTCC_DateTimeVariables.currentHour = convertBCD_toBinary(RTCC_GetValue(HOURS) & ~(HOURS_WITHOUT_ON_12));
+	RTCC_DateTimeVariables.currentMinute = convertBCD_toBinary(
+			RTCC_GetValue(MINUTES));
 	/**Reading the AM/PM**/
-	RTCC_DateTimeVariables.currentAMPM = convertBCD_toBinary((RTCC_GetValue(HOURS) & HOURS_AMPM)>>5);
+	RTCC_DateTimeVariables.currentAMPM = convertBCD_toBinary(
+			(RTCC_GetValue(HOURS) & HOURS_AMPM) >> 5);
+	/**Reading the HOURS*/
+	if (FALSE == RTCC_DateTimeVariables.currentAMPM & 0X40 >> 6) {
+		RTCC_DateTimeVariables.currentHour = convertBCD_toBinary(
+				RTCC_GetValue(HOURS) & ~(HOURS_WITHOUT_ON_12));
+	} else {
+		uint32_t horas = convertBCD_toBinary(RTCC_GetValue(HOURS) & ~(HOURS_WITHOUT_ON_12));
+		uint32_t horasL = horas-((uint32_t)(horas/10)*10);
+		if (RTCC_getGlobalVariable(HOURS) / 10) {
+			RTCC_DateTimeVariables.currentHour = 10+horasL;
+		} else {
+			RTCC_DateTimeVariables.currentHour = 00+horasL;
+		}
+	}
+
 	/**Reading the DAYS*/
-	RTCC_DateTimeVariables.currentDay = convertBCD_toBinary(RTCC_GetValue(DAYS));
+	RTCC_DateTimeVariables.currentDay = convertBCD_toBinary(
+			RTCC_GetValue(DAYS));
 	/**Reading the MONTH*/
-	RTCC_DateTimeVariables.currentMonth = convertBCD_toBinary(RTCC_GetValue(MONTH) & SECS_WITHOUT_ON_RTCC);
+	RTCC_DateTimeVariables.currentMonth = convertBCD_toBinary(
+			RTCC_GetValue(MONTH) & SECS_WITHOUT_ON_RTCC);
 	/**Reading the SECONDS*/
-	RTCC_DateTimeVariables.currentYear = convertBCD_toBinary(RTCC_GetValue(YEARS));
+	RTCC_DateTimeVariables.currentYear = convertBCD_toBinary(
+			RTCC_GetValue(YEARS));
 }
 
 //Lee un registro del MCP7940M
@@ -114,14 +131,14 @@ uint8_t RTCC_GetValue(RTCC_RegisterAdresses RTCC_Reg) {
 	I2C_start(I2C_0);
 
 	/**Writing RTCC address in the data register*/
-	I2C_write_byte(I2C_0,ADDRESS_ESCRITURA);
+	I2C_write_byte(I2C_0, ADDRESS_ESCRITURA);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
 	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
 	I2C_get_ack(I2C_0);
 
 	/**Writing the specified register address in the data register*/
-	I2C_write_byte(I2C_0,RTCC_Reg);
+	I2C_write_byte(I2C_0, RTCC_Reg);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
 	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
@@ -130,14 +147,14 @@ uint8_t RTCC_GetValue(RTCC_RegisterAdresses RTCC_Reg) {
 	/**Generating a new start*/
 	I2C_repeted_start(I2C_0);
 	/**Writing RTCC address plus 1 in the data register*/
-	I2C_write_byte(I2C_0,ADDRESS_LECTURA);
+	I2C_write_byte(I2C_0, ADDRESS_LECTURA);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
 	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
 	I2C_get_ack(I2C_0);
 
 	/**Changing the I2C module to receiver mode*/
-	I2C_tx_rx_mode(I2C_0,RECEIVER_MODE);
+	I2C_tx_rx_mode(I2C_0, RECEIVER_MODE);
 
 	/**Dummy read*/
 	dataFromRTCC = I2C_read_byte(I2C_0);
@@ -167,21 +184,21 @@ void RTCC_ChangeValue(uint8_t value, RTCC_RegisterAdresses RTCC_Reg) {
 	I2C_start(I2C_0);
 
 	/**Writing RTCC address in the data register*/
-	I2C_write_byte(I2C_0,ADDRESS_ESCRITURA);
+	I2C_write_byte(I2C_0, ADDRESS_ESCRITURA);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
 	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
 	I2C_get_ack(I2C_0);
 
 	/**Writing the specified register address in the data register*/
-	I2C_write_byte(I2C_0,RTCC_Reg);
+	I2C_write_byte(I2C_0, RTCC_Reg);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
 	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/
 	I2C_get_ack(I2C_0);
 
 	/**Writing the register with the specified value*/
-	I2C_write_byte(I2C_0,value);
+	I2C_write_byte(I2C_0, value);
 	/**Checking if the I2C module is busy by checking the transfer complete flag (technically interrupt pending flag)*/
 	I2C_wait(I2C_0);
 	/**Waiting for acknowledge.This function is able to detect if an ACK was received*/

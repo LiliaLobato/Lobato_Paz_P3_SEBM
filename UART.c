@@ -19,7 +19,7 @@ void UART_init(uart_channel_t uart_channel, uint32_t system_clk,
 
 	float SBR = 0, brfd = 0;
 	uint16_t sbr_int = 0, sbr_LOW = 0, sbr_HIGH = 0, brfa = 0;
-	SBR = (float) system_clk / ((baud_rate) * 16);
+	SBR = (float) system_clk / ((baud_rate) * 16.0F);
 	sbr_int = (uint16_t) SBR;
 	sbr_LOW = sbr_int & UART_BDL_SBR_MASK;
 	sbr_HIGH = sbr_int >> UARTn_SBR_5_SHIFT;
