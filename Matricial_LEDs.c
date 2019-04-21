@@ -9,8 +9,7 @@
 
 
 #define HT16K33_WRITE_ADDRESS 0xE0 //PHYSICAL HT16K33 ADDRESS
-#define SEG_DELAY 2
-#define HALF_SEG_DELAY 1
+
 
 uint64_t g_character1 = 0;
 uint64_t g_character2 = 0;
@@ -257,10 +256,10 @@ void Matricial_LEDs_set_string(uint8_t* cadena)
 
 void Matricial_LEDs_change_character(void)
 {
-	g_character1 =  g_string[1];
-	g_character2 = g_string[2];
-	g_next_char = g_string[3];
-	uint64_t aux = g_string[0];
+	g_character1 =  g_string[1]; //almacenamos la siguiente posicion como iniclal
+	g_character2 = g_string[2]; //el nuevo caracter en la segunda matriz
+	g_next_char = g_string[3]; // el 3ro sera el siguiente caracter
+	uint64_t aux = g_string[0]; // almacenamos el primer valor para ponerlo al final del arreglo
 	uint8_t i = 0;
 
 	while(g_string[i+1] != '\0')
@@ -274,12 +273,270 @@ void Matricial_LEDs_change_character(void)
 
 void Matricial_LEDs_modo_hora(void)
 {
-	NVIC_enable_interrupt_and_priotity(PIT_CH1_IRQ, PRIORITY_6);
+	//RTCC_ReadDateTimeFull();
+	g_character1 = Matrcicial_LEDs_decimal_decoder(23/*RTCC_getGlobalVariable(HOURS)*/); //obtenemos los valores en decimal y los decodificamos
+	g_character2 = Matrcicial_LEDs_decimal_decoder(59/*RTCC_getGlobalVariable(MINUTES)*/);
+
+	g_character1 = g_character1 | 0x0200000000000000; //toggle seconds
+
+
+	Matricial_LEDs_write(g_character1, g_character2);//imprimimos la hora
+	PIT_clear1_interrupt_flag();//limpiamos la bandera
+}
+
+void Matricial_LEDs_toggle_seg(void)
+{
+	g_character1 = g_character1 - 0x0100000000000000; //toggle seconds
+	Matricial_LEDs_write(g_character1, g_character2);//imprimimos la hora
+	PIT_clear0_interrupt_flag();//limpiamos la bandera
+}
+
+void Matricial_LEDs_Modo_Hora_init(void)
+{
+	NVIC_enable_interrupt_and_priotity(PIT_CH1_IRQ, PRIORITY_5);
+	NVIC_enable_interrupt_and_priotity(PIT_CH0_IRQ, PRIORITY_6);
 	NVIC_global_enable_interrupts;
+
+	PIT_clock_gating(); //inicializamos el pit
+	PIT_enable();
+
 	PIT_delay(PIT_1, SYSTEM_CLOCK_RATE, SEG_DELAY); //Inicializaciones del PIT
-	PIT_enable_interrupt_2(PIT_1);
+	PIT_enable_interrupt_1(PIT_1);
+
+	PIT_delay(PIT_0, SYSTEM_CLOCK_RATE, HALF_SEG_DELAY); //Inicializaciones del PIT
+	PIT_enable_interrupt_0(PIT_0);
+
+	PIT_callback_init(PIT_1, &Matricial_LEDs_modo_hora);
+	PIT_callback_init(PIT_0, &Matricial_LEDs_toggle_seg);
+
+}
+
+void Matricial_LEDs_Modo_cadena_init(void)
+{
+	NVIC_enable_interrupt_and_priotity(PIT_CH2_IRQ, PRIORITY_6);
+	NVIC_global_enable_interrupts;
+
+	PIT_clock_gating(); //inicializaciones del PIT
+	PIT_enable();
+	PIT_delay(PIT_2, SYSTEM_CLOCK_RATE, PIT_DELAY);
+	PIT_enable_interrupt_2(PIT_2);
+
+	PIT_callback_init(PIT_2, &Matricial_LEDs_shift_character);
+
+}
+
+void Matricial_LEDs_Modo_hora_callback_off(void)
+{
+	PIT_callback_init(PIT_1, 0);
+	PIT_callback_init(PIT_0, 0);
+}
+
+void Matricial_LEDs_Modo_cadena_callback_off(void)
+{
+	PIT_callback_init(PIT_2, 0);
+}
+
+uint64_t Matrcicial_LEDs_decimal_decoder(uint8_t cadena)
+{//Conversion de Decimal al valor hexadecimal del número a 64bits (8 bytes)
+	switch(cadena)
+	{
+		case 0:
+			return (0x00FF81FF00FF81FF); //0
+		break;
+		case 1:
+			return (0x00FF81FF00217F01); //1
+		break;
+		case 2:
+			return (0x00FF81FF008F89F9);
+		break;
+		case 3:
+			return (0x00FF81FF008989FF);
+		break;
+		case 4:
+			return (0x00FF81FF00F010FF);
+		break;
+		case 5:
+			return (0x00FF81FF00F9898F);
+		break;
+		case 6:
+			return (0x00FF81FF00FF898F);
+		break;
+		case 7:
+			return (0x00FF81FF008080FF);
+		break;
+		case 8:
+			return (0x00FF81FF00FF89FF);
+		break;
+		case 9:
+			return (0x00FF81FF00F888FF);
+		break;
 
 
+		/////////10-19
+
+		case 10:
+			return (0x00217F0100FF81FF); //0
+		break;
+		case 11:
+			return (0x00217F0100217F01); //1
+		break;
+		case 12:
+			return (0x00217F01008F89F9);
+		break;
+		case 13:
+			return (0x00217F01008989FF);
+		break;
+		case 14:
+			return (0x00217F0100F010FF);
+		break;
+		case 15:
+			return (0x00217F0100F9898F);
+		break;
+		case 16:
+			return (0x00217F0100FF898F);
+		break;
+		case 17:
+			return (0x00217F01008080FF);
+		break;
+		case 18:
+			return (0x00217F0100FF89FF);
+		break;
+		case 19:
+			return (0x00217F0100F888FF);
+		break;
+
+		//20-29
+
+		case 20:
+			return (0x008F89F900FF81FF); //0
+		break;
+		case 21:
+			return (0x008F89F900217F01); //1
+		break;
+		case 22:
+			return (0x008F89F9008F89F9);
+		break;
+		case 23:
+			return (0x008F89F9008989FF);
+		break;
+		case 24:
+			return (0x008F89F900F010FF);
+		break;
+		case 25:
+			return (0x008F89F900F9898F);
+		break;
+		case 26:
+			return (0x008F89F900FF898F);
+		break;
+		case 27:
+			return (0x008F89F9008080FF);
+		break;
+		case 28:
+			return (0x008F89F900FF89FF);
+		break;
+		case 29:
+			return (0x008F89F900F888FF);
+		break;
+
+		//30-39
+
+		case 30:
+			return (0x008989FF00FF81FF); //0
+		break;
+		case 31:
+			return (0x008989FF00217F01); //1
+		break;
+		case 32:
+			return (0x008989FF008F89F9);
+		break;
+		case 33:
+			return (0x008989FF008989FF);
+		break;
+		case 34:
+			return (0x008989FF00F010FF);
+		break;
+		case 35:
+			return (0x008989FF00F9898F);
+		break;
+		case 36:
+			return (0x008989FF00FF898F);
+		break;
+		case 37:
+			return (0x008989FF008080FF);
+		break;
+		case 38:
+			return (0x008989FF00FF89FF);
+		break;
+		case 39:
+			return (0x008989FF00F888FF);
+		break;
+
+		//40-49
+
+		case 40:
+			return (0x00F010FF00FF81FF); //0
+		break;
+		case 41:
+			return (0x00F010FF00217F01); //1
+		break;
+		case 42:
+			return (0x00F010FF008F89F9);
+		break;
+		case 43:
+			return (0x00F010FF008989FF);
+		break;
+		case 44:
+			return (0x00F010FF00F010FF);
+		break;
+		case 45:
+			return (0x00F010FF00F9898F);
+		break;
+		case 46:
+			return (0x00F010FF00FF898F);
+		break;
+		case 47:
+			return (0x00F010FF008080FF);
+		break;
+		case 48:
+			return (0x00F010FF00FF89FF);
+		break;
+		case 49:
+			return (0x00F010FF00F888FF);
+		break;
+
+		//50-59
+
+		case 50:
+			return (0x00F9898F00FF81FF); //0
+		break;
+		case 51:
+			return (0x00F9898F00217F01); //1
+		break;
+		case 52:
+			return (0x00F9898F008F89F9);
+		break;
+		case 53:
+			return (0x00F9898F008989FF);
+		break;
+		case 54:
+			return (0x00F9898F00F010FF);
+		break;
+		case 55:
+			return (0x00F9898F00F9898F);
+		break;
+		case 56:
+			return (0x00F9898F00FF898F);
+		break;
+		case 57:
+			return (0x00F9898F008080FF);
+		break;
+		case 58:
+			return (0x00F9898F00FF89FF);
+		break;
+		case 59:
+			return (0x00F9898F00F888FF);
+		break;
+	}
 }
 
 uint64_t Matrcicial_LEDs_ascii_decoder(uint8_t cadena)
@@ -316,6 +573,8 @@ uint64_t Matrcicial_LEDs_ascii_decoder(uint8_t cadena)
 	case '9':
 		return (0xF888FF);
 	break;
+
+
 
 	case 'a':
 		return (0x003F7FC8C87F3F00);
@@ -497,6 +756,13 @@ uint64_t Matrcicial_LEDs_ascii_decoder(uint8_t cadena)
 	break;
 	case 'Z':
 		return (0x0043474D59716100);
+	break;
+
+	case ' ':
+		return (0x8000000000000000);
+	break;
+	case '  ':
+		return (0x8000000000000000);
 	break;
 
 	default:

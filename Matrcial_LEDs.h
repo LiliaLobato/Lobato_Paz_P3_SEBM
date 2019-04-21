@@ -11,10 +11,16 @@
 #include "I2C.h"
 #include "stdint.h"
 #include "MK64F12.h"
+#include "PIT.h"
+#include "NVIC.h"
+#include "reloj.h"
 
 #define LETTER_A "A"
 #define LETTER_B "B"
 #define OCHO_PINOCHO 8
+#define SEG_DELAY 2
+#define HALF_SEG_DELAY 1
+#define PIT_DELAY (0.15F)
 
 typedef struct
 {
@@ -40,11 +46,19 @@ void Matricial_LEDs_put_character(uint64_t character1, uint64_t character2, uint
 
 uint64_t Matrcicial_LEDs_ascii_decoder(uint8_t cadena);
 
+uint64_t Matrcicial_LEDs_decimal_decoder(uint8_t cadena);
+
 void Matricial_LEDs_loop_string(uint8_t* cadena);
 
 void Matricial_LEDs_modo_hora(void);
 
+void Matricial_LEDs_toggle_seg(void);
 
+void Matricial_LEDs_Modo_cadena_init(void);
+
+void Matricial_LEDs_Modo_hora_callback_off(void);
+
+void Matricial_LEDs_Modo_cadena_callback_off(void);
 
 /*ABC_t ABC[] =
 {

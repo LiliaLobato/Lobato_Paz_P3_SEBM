@@ -20,14 +20,15 @@
 
 #define DEBUG
 #define DELAY_TIME 1000
-#define PIT_DELAY (0.5F)
+
+
 
 #ifdef DEBUG
 #include <stdio.h>
 #endif
 
 
-uint8_t numeros[30] = "ABcdeFGhIJKLMNOPQRSTUVWXyZ";
+uint8_t numeros[30] = "Quiero mis Vacaciones ";
 
 /**This is mail box to received the information from the serial port*/
 extern uart_mail_box_t g_mail_box_uart_0;
@@ -109,44 +110,19 @@ int main(void) {
 
 	I2C_init(&g_I2C_config);
 
-	PIT_clock_gating();
 
-	PIT_enable();
-
-	PIT_delay(PIT_2, SYSTEM_CLOCK_RATE, PIT_DELAY);
-
-	PIT_enable_interrupt_2(PIT_2);
 
 	//RTCC_ChangeValue(0x80, SECONDS);
 	Matricial_LEDs_init();
 	Matricial_LEDs_clear();
 	Matricial_LEDs_set_string(&numeros);
+	Matricial_LEDs_Modo_cadena_init();
+	//Matricial_LEDs_modo_hora();
+
 	//Matricial_LEDs_put_character(0x003F7FC8C87F3F00, 0x007F7F49493F3600, 0xF9898F);
-	PIT_callback_init(PIT_2, &Matricial_LEDs_shift_character);
-	//Matricial_LEDs_shift_character();
 
-	/*I2C_start();
 
-	I2C_write_byte(0xDE);
-	I2C_wait();
-	I2C_get_ack();
 
-	delay(DELAY_TIME);
-
-	I2C_write_byte(0x00);
-	I2C_wait();
-	I2C_get_ack();
-
-	delay(DELAY_TIME);
-
-	I2C_write_byte(0x80);
-	I2C_wait();
-	I2C_get_ack();
-
-	delay(DELAY_TIME);*/
-
-	//MCP7940M_tSeconds();
-	//UART_currentTime();
 
 	for (;;) {
 			switch (uart_state) {
