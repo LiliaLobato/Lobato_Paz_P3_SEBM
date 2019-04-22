@@ -17,6 +17,7 @@
 #include "Delay.h"
 #include "PIT.h"
 #include "Matrcial_LEDs.h"
+#include "UART_string.h"
 
 #define DEBUG
 #define DELAY_TIME 1000
@@ -113,12 +114,13 @@ int main(void) {
 
 
 	//RTCC_ChangeValue(0x80, SECONDS);
-	Matricial_LEDs_init();
-	Matricial_LEDs_clear();
-	Matricial_LEDs_set_string(&numeros);
-	Matricial_LEDs_Modo_cadena_init();
+	//Matricial_LEDs_init();
+	//Matricial_LEDs_clear();
+	//Matricial_LEDs_set_string(&numeros);
+	//Matricial_LEDs_Modo_Hora_init();
 	//Matricial_LEDs_modo_hora();
-
+	RAM_write(STRING_UNO ,&numeros);
+	RAM_read_string(STRING_UNO);
 	//Matricial_LEDs_put_character(0x003F7FC8C87F3F00, 0x007F7F49493F3600, 0xF9898F);
 
 
