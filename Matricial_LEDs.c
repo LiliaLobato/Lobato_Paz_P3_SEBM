@@ -180,7 +180,6 @@ void Matricial_LEDs_write(uint64_t character1, uint64_t character2) {
 	}
 
 	I2C_stop(I2C_0);
-
 }
 
 void Matricial_LEDs_clear(void) {
@@ -237,6 +236,15 @@ void Matricial_LEDs_shift_character(void) {
 			g_cont = 0;
 		}
 
+	}
+}
+
+void Matricial_LEDs_clear_gString(void)
+{
+	uint8_t i;
+	for(i = 0; i < 30; i++)
+	{
+		g_string[i] = '\0';
 	}
 }
 

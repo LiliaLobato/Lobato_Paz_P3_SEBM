@@ -112,25 +112,32 @@ void UART_cleanAllString() {
 
 //Escribe las cadenas en pantalla
 void UART_printString(){
+	if (RAM_error_cmp()) {
 	UART_put_string(UART_0, "\033[11;10H");
 	UART_put_string(UART_0, "1) ");
-	UART_put_string(UART_0, UART_getString(STRING_UNO));
+	UART_put_string(UART_0, RAM_read_string(STRING_UNO));
 
 	UART_put_string(UART_0, "\033[12;10H");
 	UART_put_string(UART_0, "2) ");
-	UART_put_string(UART_0, UART_getString(STRING_DOS));
+	UART_put_string(UART_0, RAM_read_string(STRING_DOS));
 
 	UART_put_string(UART_0, "\033[13;10H");
 	UART_put_string(UART_0, "3) ");
-	UART_put_string(UART_0, UART_getString(STRING_TRES));
+	UART_put_string(UART_0, RAM_read_string(STRING_TRES));
 
 	UART_put_string(UART_0, "\033[14;10H");
 	UART_put_string(UART_0, "4) ");
-	UART_put_string(UART_0, UART_getString(STRING_CUATRO));
+	UART_put_string(UART_0, RAM_read_string(STRING_CUATRO));
 
 	UART_put_string(UART_0, "\033[15;10H");
 	UART_put_string(UART_0, "5) ");
-	UART_put_string(UART_0, UART_getString(STRING_CINCO));
+	UART_put_string(UART_0, RAM_read_string(STRING_CINCO));
 
 	UART_put_string(UART_0, "\033[17;10H");
+} else {
+	UART_put_string(UART_0, "\033[11;10H");
+		UART_put_string(UART_0, "DESCONECTADO, PRESIONE 1-5 PARA VOLVER AL MENU ");
+
+		UART_put_string(UART_0, "\033[17;10H");
+}
 }

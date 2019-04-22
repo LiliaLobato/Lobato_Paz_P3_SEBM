@@ -33,6 +33,7 @@ typedef struct
 typedef uint8_t* uint8_pointer_t;
 
 
+void Matricial_LEDs_clear_gString(void);
 
 void Matricial_LEDs_init(void);
 

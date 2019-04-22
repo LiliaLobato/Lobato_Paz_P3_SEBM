@@ -12,6 +12,7 @@
 #include "reloj.h"
 #include "Matrcial_LEDs.h"
 #include "UART_string.h"
+#include "RAM.h"
 
 #define AUX_NUM "0"
 #define NUM_CERO '0'
@@ -119,11 +120,16 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					}
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
-
 						Matricial_LEDs_Modo_hora_callback_off();
-						Matricial_LEDs_set_string(UART_getString(STRING_UNO));
+						Matricial_LEDs_clear_gString();
+						if (RAM_error_cmp()) {
+							Matricial_LEDs_set_string(
+									RAM_read_string(STRING_UNO));
+							//UART_getString(STRING_UNO);
+						} else {
+							Matricial_LEDs_set_string("DESCONECTADO");
+						}
 						Matricial_LEDs_Modo_cadena_init();
-						//UART_getString(STRING_UNO);
 					}
 					break;
 				case DOS:
@@ -134,8 +140,14 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
 						Matricial_LEDs_Modo_hora_callback_off();
-						Matricial_LEDs_set_string(UART_getString(STRING_DOS));
-												Matricial_LEDs_Modo_cadena_init();
+						Matricial_LEDs_clear_gString();
+						if (RAM_error_cmp()) {
+							Matricial_LEDs_set_string(
+									RAM_read_string(STRING_DOS));
+						} else {
+							Matricial_LEDs_set_string("DESCONECTADO");
+						}
+						Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_DOS);
 					}
 					break;
@@ -147,8 +159,14 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
 						Matricial_LEDs_Modo_hora_callback_off();
-						Matricial_LEDs_set_string(UART_getString(STRING_TRES));
-												Matricial_LEDs_Modo_cadena_init();
+						Matricial_LEDs_clear_gString();
+						if (RAM_error_cmp()) {
+							Matricial_LEDs_set_string(
+									RAM_read_string(STRING_TRES));
+						} else {
+							Matricial_LEDs_set_string("DESCONECTADO");
+						}
+						Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_TRES);
 					}
 					break;
@@ -160,8 +178,14 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
 						Matricial_LEDs_Modo_hora_callback_off();
-						Matricial_LEDs_set_string(UART_getString(STRING_CUATRO));
-												Matricial_LEDs_Modo_cadena_init();
+						Matricial_LEDs_clear_gString();
+						if (RAM_error_cmp()) {
+							Matricial_LEDs_set_string(
+									RAM_read_string(STRING_CUATRO));
+						} else {
+							Matricial_LEDs_set_string("DESCONECTADO");
+						}
+						Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_CUATRO);
 					}
 					break;
@@ -173,8 +197,14 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 					//Manda la cadena correcta al display
 					if (LEDS_MEMORY == uart_state) {
 						Matricial_LEDs_Modo_hora_callback_off();
-						Matricial_LEDs_set_string(UART_getString(STRING_CINCO));
-												Matricial_LEDs_Modo_cadena_init();
+						Matricial_LEDs_clear_gString();
+						if (RAM_error_cmp()) {
+							Matricial_LEDs_set_string(
+									RAM_read_string(STRING_CINCO));
+						} else {
+							Matricial_LEDs_set_string("DESCONECTADO");
+						}
+						Matricial_LEDs_Modo_cadena_init();
 						//UART_getString(STRING_CINCO);
 					}
 					break;
@@ -189,7 +219,10 @@ time_status UART_check_buzon(ASCII_enter user_entry, time_status uart_state) {
 				user_entry = ENTER_STRING;
 				//SOLO CAMBIAR CUANDO SE ESTE EN STORE_STRING
 				if (STORE_STRING == uart_state) {
-					UART_setString(entry, stringNum);
+					if (RAM_error_cmp()) {
+						UART_setString(entry, stringNum);
+						RAM_write(stringNum, UART_getString(stringNum));
+					}
 				}
 			}
 

@@ -18,8 +18,10 @@
 #include "Delay.h"
 #include "PIT.h"
 #include "Matrcial_LEDs.h"
+#include "RAM.h"
 
 #define DEBUG
+#define BLUETOOTH
 #define DELAY_TIME 1000
 
 #ifdef DEBUG
@@ -99,8 +101,8 @@ int main(void) {
 	/**Configures the pin control register of pin15 in PortC as UART TX*/
 	GPIO_pin_control_register(GPIO_C, 15, &pin_control_register);
 
-	/**Configures UART 0 to transmit/receive at 11520 bauds with a 21 MHz of clock core*/
-	UART_init(UART_4, 21000000, BD_9600);
+	/**Configures UART 4 to transmit/receive at 9600 bauds with a 21 MHz of clock core*/
+	UART_init(UART_4, 10500000, BD_9600);
 
 #ifdef DEBUG
 	printf("UART is configured");
@@ -130,7 +132,11 @@ int main(void) {
 	Matricial_LEDs_init();
 	Matricial_LEDs_clear();
 
+	//Strings RAM
+	RAM_CLEAR_ALL();
+
 	for (;;) {
+#ifdef BLUETOOTH
 		//UART_put_char(UART_4, 'i');
 		//UART_put_string(UART_4, menu1);
 		//UART_put_string(UART_4, menu1);
@@ -139,6 +145,7 @@ int main(void) {
 			UART_put_char(UART_4, g_mail_box_uart_4.mailBox);
 			g_mail_box_uart_4.flag = FALSE;
 		}
+#endif
 		//Revisa si está conectado el RTCC
 		if (A == convertBCD_toBinary(RTCC_GetValue(SRAM))) {
 			estadoRTCC = CONECTADO;
@@ -148,7 +155,6 @@ int main(void) {
 		} else {
 			estadoRTCC = DESCONECTADO;
 		}
-
 
 		//Maquina de estados
 		switch (uart_state) {
@@ -235,8 +241,7 @@ int main(void) {
 			//imprime hora actual
 			if (DESCONECTADO == estadoRTCC) {
 				UART_put_string(UART_0, "\033[11;10H");
-				UART_put_string(UART_0,
-						"DESCONECTADO");
+				UART_put_string(UART_0, "DESCONECTADO");
 			} else {
 				UART_currentDate();
 			}
@@ -281,10 +286,18 @@ int main(void) {
 		case STORE_STRING:
 			//imprime pantalla
 			if (FALSE == UART_getEntryCounter()) {
-				UART_put_string(UART_0, "\033[10;10H");
-				UART_put_string(UART_0, storeString);
-				UART_put_string(UART_0, "\033[11;10H");
-				UART_setEntryCounter(1);
+				if (RAM_error_cmp()) {
+					UART_put_string(UART_0, "\033[10;10H");
+					UART_put_string(UART_0, storeString);
+					UART_put_string(UART_0, "\033[11;10H");
+					UART_setEntryCounter(1);
+				} else {
+					UART_put_string(UART_0, "\033[10;10H");
+					UART_put_string(UART_0, "EPROM DESCONECTADA");
+					UART_put_string(UART_0, "\033[11;10H");
+					UART_setEntryCounter(1);
+				}
+
 			}
 			//revisa buzon
 			uart_state = UART_check_buzon(user_entry, uart_state);
